@@ -1,0 +1,196 @@
+CabsOnline 2.0 – Part 2 README
+================================
+Student: hpr7339
+Assignment: Web Development Semester 1, 2026
+
+
+1. PUBLIC URL OF THE DEPLOYED APPLICATION
+------------------------------------------
+StackBlitz deployment:
+https://stackblitz.com/~/github/hpr7339/cabsonline-part2
+
+Part 1 (PHP backend API):
+https://webdev.aut.ac.nz/~hpr7339/assign/booking.html
+https://webdev.aut.ac.nz/~hpr7339/assign/admin.html
+
+
+2. TECHNOLOGY STACK
+--------------------
+Frontend Framework : React 18.3.1
+Build Tool         : Vite 5.4.2
+Language           : JavaScript (JSX), CSS3
+Fonts              : Bebas Neue, IBM Plex Mono, IBM Plex Sans (Google Fonts)
+Map Provider       : Custom SVG map (OpenStreetMap data, no API key required)
+API Communication  : Fetch API (async/await)
+Backend (Part 1)   : PHP 7+, MySQL, Apache (webdev.aut.ac.nz)
+Deployment         : StackBlitz (Part 2), AUT webdev server (Part 1 API)
+
+
+3. HOW TO RUN AND BUILD THE PROJECT LOCALLY
+--------------------------------------------
+Prerequisites:
+  - Node.js 18+ installed
+  - npm 9+ installed
+
+Steps:
+  1. Unzip Part2_hpr7339.zip
+  2. Open terminal in the project folder
+  3. Install dependencies:
+       npm install
+  4. Start development server:
+       npm run dev
+  5. Open browser at http://localhost:5173
+
+To build for production:
+       npm run build
+  Output will be in the /dist folder.
+
+To preview the production build:
+       npm run preview
+
+
+4. MICROSERVICE API ENDPOINTS USED
+------------------------------------
+All API calls are made to the Part 1 PHP backend on webdev.aut.ac.nz.
+
+POST https://webdev.aut.ac.nz/~hpr7339/assign/booking.php
+  Purpose  : Submit a new taxi booking
+  Request  : FormData (cname, phone, unumber, snumber, stname, sbname, dsbname, date, time)
+  Response : JSON { success, brn, time, date } on success
+             JSON { success: false, message } on error
+
+POST https://webdev.aut.ac.nz/~hpr7339/assign/admin.php
+  action=search, bsearch=<BRN or empty>
+  Purpose  : Search for a booking by BRN, or get all unassigned bookings within 2 hours
+  Response : JSON { success, records: [...] }
+
+  action=assign, brn=<BRN>
+  Purpose  : Update booking status from "unassigned" to "assigned"
+  Response : JSON { success, message }
+
+
+5. FEATURE DESCRIPTIONS
+------------------------
+
+Feature 1: Map-Based Booking (BookingMap.jsx)
+  An interactive SVG map of Auckland allows customers to click suburb pins
+  to select their pickup and destination suburbs. The form pre-fills the
+  suburb fields automatically. Customers complete their booking details and
+  submit via the Part 1 booking.php API. A confirmation message with the
+  booking reference number is displayed on successful submission.
+
+Feature 2: Driver Querying Service (DriverService.jsx)
+  Displays the full CabsOnline driver fleet with real-time status indicators
+  (Available, On Trip, Offline). Admin staff can search or filter drivers by
+  name, ID, or area. Selecting an available driver and entering a booking
+  reference number assigns the driver to that booking. Driver profiles show
+  vehicle details, current area, rating, and total trips completed.
+
+Feature 3: Customer Monitoring Service (CustomerMonitor.jsx)
+  Customers enter their booking reference number to track the status of their
+  booking in real time. The component polls the admin.php API every 15 seconds
+  and displays a visual timeline showing the progression through:
+  Submitted → Pending → Assigned → En Route → Complete.
+  An estimated arrival time is shown once the booking is assigned.
+  A live stats dashboard shows total bookings, assigned, and pending counts.
+
+Feature 4: Payment Processing (Payment.jsx)
+  A fare calculator estimates the trip cost based on the selected pickup and
+  destination suburbs using Auckland distance data, a base fare, per-km rate,
+  and GST (15%). Customers enter card details through a styled payment form
+  with real-time card number and expiry formatting. Payment processing is
+  simulated (no real charges are made). A receipt is displayed on success.
+
+
+6. TESTING INSTRUCTIONS
+------------------------
+
+Example Booking References (created during Part 1 testing):
+  BRN00001
+  BRN00002
+  BRN00003
+
+Sample Driver IDs (Feature 2):
+  DRV001 – Mike Johnson    (Available, Auckland CBD)
+  DRV002 – Sarah Lee       (On Trip, Ponsonby)
+  DRV003 – James Patel     (Available, Newmarket)
+  DRV005 – Tom Williams    (Available, Henderson)
+  DRV007 – David Kim       (Available, Manukau)
+
+Testing Feature 1 (Map Booking):
+  1. Click "Select Pickup" then click a suburb pin on the map
+  2. Click "Select Destination" then click a different suburb pin
+  3. Fill in name, phone (10-12 digits), street number, street name
+  4. Confirm date/time is not in the past
+  5. Click "Confirm Booking →"
+  6. Verify BRN confirmation message appears
+
+Testing Feature 2 (Driver Service):
+  1. Filter by "Available" to see only available drivers
+  2. Click "Select" on any available driver (DRV001, DRV003, DRV005, DRV007)
+  3. Enter a BRN from the example list above (e.g. BRN00001)
+  4. Click "Assign Driver →"
+  5. Verify success message appears
+
+Testing Feature 3 (Customer Monitor):
+  1. Enter a booking reference (e.g. BRN00001) in the search field
+  2. Click "Track" or press Enter
+  3. Verify the status timeline and booking details appear
+  4. Observe the 15-second live refresh countdown
+
+Testing Feature 4 (Payment):
+  1. Select a pickup suburb and destination suburb in the fare calculator
+  2. Observe the fare breakdown update automatically
+  3. Enter a booking reference (e.g. BRN00001)
+  4. Fill in test card details:
+       Card Number : 4111 1111 1111 1111
+       Name        : Test User
+       Expiry      : 12/27
+       CVV         : 123
+  5. Click "Pay NZD $X.XX →"
+  6. Observe loading animation, then success receipt
+
+
+7. LIMITATIONS AND KNOWN ISSUES
+---------------------------------
+- The map in Feature 1 is a custom SVG representation of Auckland suburbs.
+  It does not use live GPS or real map tiles. For a production system,
+  Google Maps or Leaflet.js with OpenStreetMap tiles would be integrated.
+- Driver status in Feature 2 uses mock data. In production, driver locations
+  and statuses would be updated via a real-time database or WebSocket service.
+- Payment processing in Feature 4 is fully simulated. No real payment gateway
+  (e.g. Stripe, PayPal) is connected. Cards are not validated against a bank.
+- The monitoring poll interval (15 seconds) is suitable for demonstration.
+  A production system would use WebSockets for true real-time updates.
+- CORS restrictions may affect direct API calls from StackBlitz to the AUT
+  webdev server. If API calls fail, the app gracefully displays error messages.
+
+
+8. REFLECTION ON AI-SUPPORTED DEVELOPMENT PROCESS
+---------------------------------------------------
+This project was developed with the assistance of Claude (Anthropic) as the
+primary AI tool throughout the development process.
+
+How AI was used:
+  - Architecture planning: Claude helped design the four-feature component
+    structure and the data flow between React components and the PHP API.
+  - Code generation: All React components (BookingMap, DriverService,
+    CustomerMonitor, Payment) were generated with Claude's assistance,
+    based on the assignment specification requirements.
+  - Debugging: Claude assisted in identifying and fixing issues such as
+    date format conversions (YYYY-MM-DD vs DD/MM/YYYY), form validation
+    logic, and CSS layout problems.
+  - Documentation: This README was structured and written with Claude's help
+    to ensure all required sections were covered thoroughly.
+
+Reflection:
+  AI-assisted development significantly accelerated the implementation of
+  all four features within a single session. The most valuable aspect was
+  Claude's ability to understand the assignment requirements and generate
+  code that directly addressed the marking criteria. However, it was important
+  to review every generated file to ensure correctness, especially for
+  PHP-React integration and the specific name attributes required by the spec.
+  AI is a powerful tool for scaffolding, but understanding and reviewing the
+  output remains essential for producing quality, correct software.
+
+================================================================
